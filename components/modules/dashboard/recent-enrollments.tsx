@@ -13,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AvatarInitials } from "@/components/shared/avatar-initials";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import type { ClassRoom, Student } from "@/lib/types";
 
@@ -41,9 +40,12 @@ export function RecentEnrollments({
             Latest students added to the centre
           </p>
         </div>
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/students">View all</Link>
-        </Button>
+        <Link
+          href="/students"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          View all students →
+        </Link>
       </CardHeader>
       <CardContent className="pt-2">
         {recent.length === 0 ? (

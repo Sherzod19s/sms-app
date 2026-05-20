@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { isSameDay, parseISO } from "date-fns";
 import { CalendarOff, Clock, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,11 +21,19 @@ export function UpcomingClasses({
 
   return (
     <Card className="flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle>Today&rsquo;s classes</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          {todays.length} session{todays.length === 1 ? "" : "s"} scheduled
-        </p>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Today&rsquo;s classes</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            {todays.length} session{todays.length === 1 ? "" : "s"} scheduled
+          </p>
+        </div>
+        <Link
+          href="/schedule"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          View schedule →
+        </Link>
       </CardHeader>
       <CardContent className="flex-1 pt-2">
         {todays.length === 0 ? (
