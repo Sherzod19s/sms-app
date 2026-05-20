@@ -1,5 +1,16 @@
 export type Status = "active" | "inactive";
 export type InvoiceStatus = "Paid" | "Unpaid" | "Partial";
+
+export const EXPENSE_CATEGORIES = [
+  "Salaries",
+  "Rent",
+  "Utilities",
+  "Supplies",
+  "Marketing",
+  "Maintenance",
+  "Other",
+] as const;
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 export type WeekDay =
   | "Monday"
   | "Tuesday"
@@ -47,6 +58,14 @@ export interface Invoice {
   issueDate: string; // ISO
   dueDate: string; // ISO
   status: InvoiceStatus;
+}
+
+export interface Expense {
+  id: string;
+  description: string;
+  category: ExpenseCategory;
+  amount: number;
+  date: string; // ISO yyyy-MM-dd
 }
 
 export interface ClassSession {

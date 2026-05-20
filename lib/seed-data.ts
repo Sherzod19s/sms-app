@@ -2,6 +2,7 @@ import { addDays, format, startOfWeek } from "date-fns";
 import type {
   ClassRoom,
   ClassSession,
+  Expense,
   Invoice,
   Student,
   Teacher,
@@ -219,6 +220,67 @@ export const INVOICES: Invoice[] = [
     issueDate: `${twoMonthsAgo}-01`,
     dueDate: `${twoMonthsAgo}-15`,
     status: "Paid",
+  },
+];
+
+// Expenses dated across the same months invoices cover, so the
+// 6-month income-vs-expenses chart on the dashboard always renders meaningfully.
+export const EXPENSES: Expense[] = [
+  {
+    id: "exp_001",
+    description: "Teacher salaries",
+    category: "Salaries",
+    amount: 4200,
+    date: `${thisMonth}-05`,
+  },
+  {
+    id: "exp_002",
+    description: "Centre rent",
+    category: "Rent",
+    amount: 1800,
+    date: `${thisMonth}-01`,
+  },
+  {
+    id: "exp_003",
+    description: "Electricity & water",
+    category: "Utilities",
+    amount: 320,
+    date: `${thisMonth}-10`,
+  },
+  {
+    id: "exp_004",
+    description: "Art & craft supplies",
+    category: "Supplies",
+    amount: 240,
+    date: `${lastMonth}-12`,
+  },
+  {
+    id: "exp_005",
+    description: "Teacher salaries",
+    category: "Salaries",
+    amount: 4000,
+    date: `${lastMonth}-05`,
+  },
+  {
+    id: "exp_006",
+    description: "Centre rent",
+    category: "Rent",
+    amount: 1800,
+    date: `${lastMonth}-01`,
+  },
+  {
+    id: "exp_007",
+    description: "Social media ads",
+    category: "Marketing",
+    amount: 180,
+    date: `${twoMonthsAgo}-18`,
+  },
+  {
+    id: "exp_008",
+    description: "Air-conditioner repair",
+    category: "Maintenance",
+    amount: 420,
+    date: `${twoMonthsAgo}-22`,
   },
 ];
 
