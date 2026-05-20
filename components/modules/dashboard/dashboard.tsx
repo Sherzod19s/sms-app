@@ -19,6 +19,7 @@ import { UpcomingClasses } from "./upcoming-classes";
 import { RecentEnrollments } from "./recent-enrollments";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
+import { useExpenses } from "@/hooks/use-expenses";
 
 
 export function Dashboard() {
@@ -27,6 +28,7 @@ export function Dashboard() {
   const { data: sessions, hydrated: seH } = useSessions();
   const { data: classes } = useClasses();
   const { data: teachers } = useTeachers();
+  const { data: data_expenses } = useExpenses();
 
   const hydrated = sH && iH && seH;
 
@@ -50,16 +52,20 @@ export function Dashboard() {
   ).length;
 
   // Last 6 months revenue
+
   const revenueByMonth = Array.from({ length: 6 }).map((_, idx) => {
     const monthDate = subMonths(today, 5 - idx);
     const key = format(monthDate, "yyyy-MM");
-    const total = invoices
+    const income = invoices
       .filter(
         (inv) =>
           inv.status === "Paid" && inv.issueDate.startsWith(key)
       )
       .reduce((s, inv) => s + inv.amountPaid, 0);
-    return { month: format(monthDate, "MMM"), revenue: total };
+    const expenses = data_expenses
+      .filter((exp) => exp.date.startsWith(key))
+      .reduce((s, exp) => s + exp.amount, 0);
+    return { month: format(monthDate, "MMM"), income, expenses };
   });
 
   if (!hydrated) {
