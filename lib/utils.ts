@@ -12,7 +12,7 @@ export function formatCurrency(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
-  return `Somoni ${formatted}`;
+  return `Som. ${formatted}`;
 }
 
 export function formatDate(date: string | Date, pattern = "dd MMM yyyy"): string {

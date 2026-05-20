@@ -45,7 +45,7 @@ export function KpiCard({
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {label}
             </p>
-            <p className="mt-2 font-display text-2xl font-semibold tracking-tight">
+            <p className="mt-2 font-display text-xl font-semibold tracking-tight">
               {value}
             </p>
             {hint && (
