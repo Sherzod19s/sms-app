@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Moon, Sun } from "lucide-react";
+import { Bell, Moon, Settings, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -36,7 +36,7 @@ export function Header() {
 
       <div className="hidden flex-col leading-tight sm:flex">
         <span className="font-display text-base font-semibold tracking-tight">
-          Aqlvoy Sen
+          Aqlvoy Sen Learning Centre
         </span>
         <span className="text-xs text-muted-foreground">
           {format(today, "EEEE, d MMMM yyyy")}
@@ -56,6 +56,18 @@ export function Header() {
           ) : (
             <Moon className="h-[18px] w-[18px]" />
           )}
+        </Button>
+
+        {/* Settings */}
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          aria-label="Settings"
+        >
+          <Link href="/settings">
+            <Settings className="h-[18px] w-[18px]" />
+          </Link>
         </Button>
 
         {/* Notification bell */}

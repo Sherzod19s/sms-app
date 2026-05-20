@@ -1,4 +1,4 @@
-# Brightseed — School Management System (Prototype)
+# Aqlvoy Sen — School Management System (Prototype)
 
 A front-end-only prototype of a School Management System (SMS) for a small
 kids' educational centre. No backend, no database, no auth — every change is
@@ -100,7 +100,7 @@ To reset to seed data, clear your browser's `localStorage` for the site
 
 ## Customising
 
-- **Centre name / branding** — edit `components/layout/sidebar.tsx` and `header.tsx` (look for "Brightseed")
+- **Centre name / branding** — edit `components/layout/sidebar.tsx` and `header.tsx` (look for "Aqlvoy Sen")
 - **Currency** — change `formatCurrency` in `lib/utils.ts`
 - **Seed data** — edit `lib/seed-data.ts` (only used on first load)
 - **Theme colours** — edit the HSL variables in `app/globals.css`

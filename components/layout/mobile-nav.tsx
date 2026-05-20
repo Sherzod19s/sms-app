@@ -27,7 +27,7 @@ export function MobileNav() {
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-display text-base font-semibold leading-tight">Brightseed</p>
+            <p className="font-display text-base font-semibold leading-tight">Aqlvoy Sen</p>
             <p className="text-xs text-muted-foreground">Learning Centre</p>
           </div>
         </div>

@@ -27,7 +27,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="font-display text-base font-semibold leading-tight tracking-tight">
-              Aqlvoy Sen
+              Aqlvoy
             </p>
             <p className="text-xs text-muted-foreground">Learning Centre</p>
           </div>
@@ -35,28 +35,57 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
-                collapsed && "justify-center px-0"
-              )}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon className="h-[18px] w-[18px] shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex flex-1 flex-col overflow-y-auto p-3">
+        <div className="flex-1 space-y-1">
+          {NAV_ITEMS.filter((i) => !i.footer).map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
+                  collapsed && "justify-center px-0"
+                )}
+                title={collapsed ? item.label : undefined}
+              >
+                <Icon className="h-[18px] w-[18px] shrink-0" />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Footer nav items pinned to the bottom with a divider */}
+        {NAV_ITEMS.some((i) => i.footer) && (
+          <div className="mt-2 space-y-1 border-t pt-2">
+            {NAV_ITEMS.filter((i) => i.footer).map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
+                    collapsed && "justify-center px-0"
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <Icon className="h-[18px] w-[18px] shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
       {/* Collapse toggle */}
