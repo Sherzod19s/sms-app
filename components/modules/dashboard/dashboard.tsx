@@ -13,11 +13,13 @@ import { useSessions } from "@/hooks/use-sessions";
 import { useClasses } from "@/hooks/use-classes";
 import { useTeachers } from "@/hooks/use-teachers";
 import { KpiCard } from "./kpi-card";
+import Link from "next/link";
 import { RevenueChart } from "./revenue-chart";
 import { UpcomingClasses } from "./upcoming-classes";
 import { RecentEnrollments } from "./recent-enrollments";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
+
 
 export function Dashboard() {
   const { data: students, hydrated: sH } = useStudents();
@@ -93,34 +95,47 @@ export function Dashboard() {
       </header>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          icon={GraduationCap}
-          label="Total Students"
-          value={totalStudents.toString()}
-          hint={`${students.length - totalStudents} inactive`}
-          tone="default"
-        />
-        <KpiCard
-          icon={Wallet}
-          label="Monthly Revenue"
-          value={formatCurrency(monthlyRevenue)}
-          hint={format(today, "MMMM yyyy")}
-          tone="success"
-        />
-        <KpiCard
-          icon={AlertTriangle}
-          label="Unpaid Invoices"
-          value={unpaidCount.toString()}
-          hint="Need follow-up"
-          tone="warning"
-        />
-        <KpiCard
-          icon={CalendarDays}
-          label="Classes Today"
-          value={classesToday.toString()}
-          hint={format(today, "EEEE")}
-          tone="info"
-        />
+
+        <Link href="/students">
+          <KpiCard
+            icon={GraduationCap}
+            label="Total Students"
+            value={totalStudents.toString()}
+            hint={`${students.length - totalStudents} inactive`}
+            tone="default"
+          />
+        </Link>
+
+        <Link href="/finance">
+          <KpiCard
+            icon={Wallet}
+            label="Monthly Revenue"
+            value={formatCurrency(monthlyRevenue)}
+            hint={format(today, "MMMM yyyy")}
+            tone="success"
+          />
+        </Link>
+
+        <Link href="/finance">
+          <KpiCard
+            icon={AlertTriangle}
+            label="Unpaid Invoices"
+            value={unpaidCount.toString()}
+            hint="Need follow-up"
+            tone="warning"
+          />
+        </Link>
+
+        <Link href="/schedule">
+          <KpiCard
+            icon={CalendarDays}
+            label="Classes Today"
+            value={classesToday.toString()}
+            hint={format(today, "EEEE")}
+            tone="info"
+          />
+        </Link>
+
       </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">

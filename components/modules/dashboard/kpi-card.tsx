@@ -38,7 +38,7 @@ export function KpiCard({
 }) {
   const styles = toneStyles[tone];
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
