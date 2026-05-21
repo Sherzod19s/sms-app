@@ -47,10 +47,9 @@ export const studentToRow = (s: Partial<Omit<Student, "id">>) => {
   return row;
 };
 
-// ----- Profiles → Teachers -----
-// The schema has no "teachers" table; teachers ARE profiles with role='teacher'.
-// We materialise the rest of the Teacher fields on the client by joining
-// against the classes table for classIds.
+// ----- Profiles -----
+// Profiles represent application users (admins + teacher-role accounts), not
+// the centre's teaching staff. The latter live in their own `teachers` table.
 
 export interface ProfileRow {
   id: string;
@@ -59,17 +58,38 @@ export interface ProfileRow {
   created_at: string;
 }
 
-export const teacherFromProfile = (
-  p: ProfileRow,
-  classIds: string[] = []
-): Teacher => ({
-  id: p.id,
-  name: p.full_name,
-  subject: "",
+// ----- Teachers -----
+// classIds is derived on the client by joining against the classes table —
+// it isn't a column on the teachers row itself.
+
+export interface TeacherRow {
+  id: string;
+  full_name: string;
+  subject: string | null;
+  contact: string | null;
+  join_date: string;
+  created_at: string;
+}
+
+export const teacherFromRow = (r: TeacherRow, classIds: string[] = []): Teacher => ({
+  id: r.id,
+  name: r.full_name,
+  subject: r.subject ?? "",
   classIds,
-  contact: "",
-  joinDate: p.created_at?.slice(0, 10) ?? "",
+  contact: r.contact ?? "",
+  joinDate: r.join_date,
 });
+
+export const teacherToRow = (t: Partial<Omit<Teacher, "id">>) => {
+  const row: Record<string, unknown> = {};
+  if (t.name !== undefined) row.full_name = t.name;
+  if (t.subject !== undefined) row.subject = t.subject || null;
+  if (t.contact !== undefined) row.contact = t.contact || null;
+  if (t.joinDate !== undefined) row.join_date = t.joinDate;
+  // classIds is intentionally NOT mapped to a column — it's synced separately
+  // by updating classes.teacher_id rows.
+  return row;
+};
 
 // ----- Classes -----
 

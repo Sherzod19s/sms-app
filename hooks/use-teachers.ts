@@ -4,23 +4,19 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
-  teacherFromProfile,
+  teacherFromRow,
+  teacherToRow,
   type ClassRow,
-  type ProfileRow,
+  type TeacherRow,
 } from "@/lib/supabase/mappers";
 import type { CRUDHook, Teacher } from "@/lib/types";
 
 /**
- * Teachers are profiles with role='teacher'. The schema does not have a
- * dedicated teachers table, so:
- *  - data: profile rows (role='teacher') decorated with classIds derived from
- *          the classes table.
- *  - add: not supported here (teachers are created via signup). Surfaces a
- *          toast explaining how to onboard a teacher.
- *  - update: writes full_name to profiles. The other Teacher fields (subject,
- *          contact, joinDate) aren't in the schema and are silently dropped.
- *  - remove: deletes the profile row (cascades from auth.users via FK in your
- *          own setup if you want — see README).
+ * Teachers as data records — no longer tied to auth.users / profiles.
+ *
+ * `classIds` doesn't live on the teachers row; we derive it by joining against
+ * the classes table, and we sync it back on update by flipping
+ * classes.teacher_id values to match.
  */
 export function useTeachers(): CRUDHook<Teacher> {
   const [data, setData] = useState<Teacher[]>([]);
@@ -28,14 +24,17 @@ export function useTeachers(): CRUDHook<Teacher> {
 
   const fetchAll = useCallback(async () => {
     const supabase = createClient();
-    const [profilesRes, classesRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("role", "teacher"),
+    const [teachersRes, classesRes] = await Promise.all([
+      supabase
+        .from("teachers")
+        .select("*")
+        .order("created_at", { ascending: false }),
       supabase.from("classes").select("id, teacher_id"),
     ]);
 
-    if (profilesRes.error) {
-      console.error("[teachers] fetch failed", profilesRes.error);
-      toast.error(`Failed to load teachers: ${profilesRes.error.message}`);
+    if (teachersRes.error) {
+      console.error("[teachers] fetch failed", teachersRes.error);
+      toast.error(`Failed to load teachers: ${teachersRes.error.message}`);
       setLoading(false);
       return;
     }
@@ -49,8 +48,8 @@ export function useTeachers(): CRUDHook<Teacher> {
     });
 
     setData(
-      (profilesRes.data as ProfileRow[]).map((p) =>
-        teacherFromProfile(p, classMap.get(p.id) ?? [])
+      (teachersRes.data as TeacherRow[]).map((t) =>
+        teacherFromRow(t, classMap.get(t.id) ?? [])
       )
     );
     setLoading(false);
@@ -60,62 +59,87 @@ export function useTeachers(): CRUDHook<Teacher> {
     void fetchAll();
   }, [fetchAll]);
 
-  const add = useCallback(async (_item: Omit<Teacher, "id">) => {
-    toast.info("Add teachers by inviting them to sign up — they'll appear here once they create an account.");
-  }, []);
+  // Sync teacher → classes assignment. Called from add() (after insert) and
+  // update() to flip classes.teacher_id rows.
+  const syncClassAssignments = useCallback(
+    async (teacherId: string, classIds: string[]) => {
+      const supabase = createClient();
+      // Unset this teacher from all classes they're currently on.
+      const { error: unsetErr } = await supabase
+        .from("classes")
+        .update({ teacher_id: null })
+        .eq("teacher_id", teacherId);
+      if (unsetErr) {
+        console.error("[teachers] unset assignments failed", unsetErr);
+        toast.error(`Could not update assignments: ${unsetErr.message}`);
+        return false;
+      }
+      // Reassign to the requested classes (if any).
+      if (classIds.length > 0) {
+        const { error: setErr } = await supabase
+          .from("classes")
+          .update({ teacher_id: teacherId })
+          .in("id", classIds);
+        if (setErr) {
+          console.error("[teachers] set assignments failed", setErr);
+          toast.error(`Could not update assignments: ${setErr.message}`);
+          return false;
+        }
+      }
+      return true;
+    },
+    []
+  );
+
+  const add = useCallback(
+    async (item: Omit<Teacher, "id">) => {
+      const supabase = createClient();
+      const { data: inserted, error } = await supabase
+        .from("teachers")
+        .insert(teacherToRow(item))
+        .select("id")
+        .single();
+      if (error || !inserted) {
+        console.error("[teachers] insert failed", error);
+        toast.error(`Could not save: ${error?.message ?? "unknown error"}`);
+        return;
+      }
+      if (item.classIds && item.classIds.length > 0) {
+        await syncClassAssignments(inserted.id, item.classIds);
+      }
+      await fetchAll();
+    },
+    [fetchAll, syncClassAssignments]
+  );
 
   const update = useCallback(
     async (id: string, patch: Partial<Omit<Teacher, "id">>) => {
       const supabase = createClient();
-      const row: Record<string, unknown> = {};
-      if (patch.name !== undefined) row.full_name = patch.name;
-      // subject / contact / joinDate aren't in the profiles table — dropped.
-
-      // Sync the teacher↔class assignment by writing to the classes table.
-      if (patch.classIds !== undefined) {
-        // Unset this teacher from all classes, then reassign the chosen ones.
-        const { error: unsetErr } = await supabase
-          .from("classes")
-          .update({ teacher_id: null })
-          .eq("teacher_id", id);
-        if (unsetErr) {
-          console.error("[teachers] unset assignments failed", unsetErr);
-          toast.error(`Could not update assignments: ${unsetErr.message}`);
+      const row = teacherToRow(patch);
+      if (Object.keys(row).length > 0) {
+        const { error } = await supabase.from("teachers").update(row).eq("id", id);
+        if (error) {
+          console.error("[teachers] update failed", error);
+          toast.error(`Could not update: ${error.message}`);
           return;
-        }
-        if (patch.classIds.length > 0) {
-          const { error: setErr } = await supabase
-            .from("classes")
-            .update({ teacher_id: id })
-            .in("id", patch.classIds);
-          if (setErr) {
-            console.error("[teachers] set assignments failed", setErr);
-            toast.error(`Could not update assignments: ${setErr.message}`);
-            return;
-          }
         }
       }
-
-      if (Object.keys(row).length > 0) {
-        const { error } = await supabase.from("profiles").update(row).eq("id", id);
-        if (error) {
-          console.error("[teachers] profile update failed", error);
-          toast.error(`Could not update teacher: ${error.message}`);
-          return;
-        }
+      if (patch.classIds !== undefined) {
+        const ok = await syncClassAssignments(id, patch.classIds);
+        if (!ok) return;
       }
       await fetchAll();
     },
-    [fetchAll]
+    [fetchAll, syncClassAssignments]
   );
 
   const remove = useCallback(
     async (id: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from("profiles").delete().eq("id", id);
+      const { error } = await supabase.from("teachers").delete().eq("id", id);
       if (error) {
         console.error("[teachers] delete failed", error);
-        toast.error(`Could not delete teacher: ${error.message}`);
+        toast.error(`Could not delete: ${error.message}`);
         return;
       }
       await fetchAll();
