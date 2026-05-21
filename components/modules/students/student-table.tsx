@@ -97,15 +97,16 @@ export function StudentTable({
                 <TableCell>{s.age}</TableCell>
                 <TableCell>
                   {cls ? (
-                    <span
-                      className="inline-flex items-center gap-2 rounded-full bg-secondary px-2.5 py-0.5 text-xs"
+                    <Link
+                      href="/classes"
+                      className="inline-flex items-center gap-2 rounded-full bg-secondary px-2.5 py-0.5 text-xs transition-colors hover:bg-accent/20"
                     >
                       <span
                         className="h-1.5 w-1.5 rounded-full"
                         style={{ background: cls.color }}
                       />
                       {cls.name}
-                    </span>
+                    </Link>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

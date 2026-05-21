@@ -43,9 +43,11 @@ export interface Teacher {
 export interface ClassRoom {
   id: string;
   name: string;
+  subject: string;
   teacherId: string;
   scheduleDays: WeekDay[];
   maxCapacity: number;
+  room?: string;
   color: string; // hex for calendar / badge
 }
 

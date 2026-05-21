@@ -13,33 +13,41 @@ export const CLASSES: ClassRoom[] = [
   {
     id: "cls_math_juniors",
     name: "Math Juniors",
+    subject: "Mathematics for ages 6–9",
     teacherId: "tch_priya",
     scheduleDays: ["Monday", "Wednesday", "Friday"],
     maxCapacity: 12,
+    room: "Room A",
     color: "#f97316", // orange
   },
   {
     id: "cls_english_starters",
     name: "English Starters",
+    subject: "Early literacy & phonics",
     teacherId: "tch_daniel",
     scheduleDays: ["Tuesday", "Thursday"],
     maxCapacity: 10,
+    room: "Room B",
     color: "#10b981", // emerald
   },
   {
     id: "cls_science_kids",
     name: "Science Kids",
+    subject: "Hands-on science exploration",
     teacherId: "tch_priya",
     scheduleDays: ["Monday", "Thursday"],
     maxCapacity: 14,
+    room: "Lab",
     color: "#3b82f6", // blue
   },
   {
     id: "cls_art_craft",
     name: "Art & Craft",
+    subject: "Creative arts & crafts",
     teacherId: "tch_mei",
     scheduleDays: ["Wednesday", "Saturday"],
     maxCapacity: 10,
+    room: "Studio 1",
     color: "#ec4899", // pink
   },
 ];

@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   GraduationCap,
+  BookOpen,
   Wallet,
   Calendar,
   Users,
@@ -19,6 +20,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/students", label: "Students", icon: GraduationCap },
+  { href: "/classes", label: "Classes", icon: BookOpen },
   { href: "/finance", label: "Finance", icon: Wallet },
   { href: "/schedule", label: "Schedule", icon: Calendar },
   { href: "/teachers", label: "Teachers", icon: Users },

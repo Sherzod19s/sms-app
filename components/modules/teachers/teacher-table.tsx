@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
 import {
   Table,
@@ -91,16 +92,17 @@ export function TeacherTable({
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {assigned.map((c) => (
-                        <span
+                        <Link
                           key={c.id}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2 py-0.5 text-xs"
+                          href="/classes"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2 py-0.5 text-xs transition-colors hover:bg-accent/20"
                         >
                           <span
                             className="h-1.5 w-1.5 rounded-full"
                             style={{ background: c.color }}
                           />
                           {c.name}
-                        </span>
+                        </Link>
                       ))}
                     </div>
                   )}
