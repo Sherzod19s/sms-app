@@ -91,10 +91,10 @@ export function Dashboard() {
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Good {greeting()}, Meru
+          Good {greeting()}, Botir Karimov
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Here&rsquo;s what&rsquo;s happening at Brightseed today.
+          Here&rsquo;s what&rsquo;s happening at Aqlvoy Sen today.
         </p>
       </header>
 

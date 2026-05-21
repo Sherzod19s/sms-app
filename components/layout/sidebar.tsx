@@ -15,7 +15,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-30 hidden h-screen border-r bg-card transition-[width] duration-300 ease-out lg:flex lg:flex-col",
+        "fixed left-0 top-0 z-30 hidden h-screen border-r bg-card transition-[width] duration-300 ease-out lg:relative lg:flex lg:flex-col lg:top-auto lg:left-auto lg:z-auto",
         collapsed ? "w-[72px]" : "w-[260px]"
       )}
     >
@@ -27,7 +27,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="font-display text-base font-semibold leading-tight tracking-tight">
-              Brightseed
+              Aqlvoy Sen
             </p>
             <p className="text-xs text-muted-foreground">Learning Centre</p>
           </div>
