@@ -27,7 +27,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="font-display text-base font-semibold leading-tight tracking-tight">
-              Aqlvoy Sen
+              Brightseed
             </p>
             <p className="text-xs text-muted-foreground">Learning Centre</p>
           </div>

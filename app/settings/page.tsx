@@ -1,120 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Monitor, Moon, Sun, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AvatarInitials } from "@/components/shared/avatar-initials";
 import { cn } from "@/lib/utils";
-
-// Pre-fill defaults — these are the in-app branding values. A future task
-// can wire these to localStorage so changes persist app-wide.
-const CENTER_CONFIG = {
-  centerName: "Aqlvoy Sen",
-  adminName: "Botir Karimov",
-  currencySymbol: "SM",
-};
-
-// All localStorage keys our CRUD hooks use. Listed explicitly so the reset
-// is intentional and won't nuke unrelated keys.
-const STORAGE_KEYS = [
-  "sms:students",
-  "sms:teachers",
-  "sms:classes",
-  "sms:invoices",
-  "sms:sessions",
-  "sms:expenses",
-];
+import { createClient } from "@/lib/supabase/client";
 
 type ThemeChoice = "light" | "dark" | "system";
 
+type Account = {
+  fullName: string;
+  email: string;
+  role: "admin" | "teacher";
+};
+
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const [account, setAccount] = useState<Account | null>(null);
+  const [loadingAccount, setLoadingAccount] = useState(true);
 
-  const [centerName, setCenterName] = useState(CENTER_CONFIG.centerName);
-  const [adminName, setAdminName] = useState(CENTER_CONFIG.adminName);
-  const [currencySymbol, setCurrencySymbol] = useState(CENTER_CONFIG.currencySymbol);
-
-  const saveGeneral = () => {
-    // In-memory only for now; persistence is a future task.
-    toast.success("Settings saved");
-  };
-
-  const resetData = () => {
-    STORAGE_KEYS.forEach((k) => window.localStorage.removeItem(k));
-    toast.success("Data reset — reloading…");
-    // Reload so all hooks re-seed from defaults on next mount.
-    setTimeout(() => window.location.reload(), 600);
-  };
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const supabase = createClient();
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user || cancelled) {
+        setLoadingAccount(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, role")
+        .eq("id", authData.user.id)
+        .single();
+      if (cancelled) return;
+      setAccount({
+        fullName: profile?.full_name ?? authData.user.email ?? "User",
+        email: authData.user.email ?? "",
+        role: (profile?.role as "admin" | "teacher") ?? "teacher",
+      });
+      setLoadingAccount(false);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
         <h1 className="font-display text-3xl font-semibold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure centre details, appearance, and local data.
+          Manage your account and appearance preferences.
         </p>
       </header>
 
-      {/* General */}
+      {/* My Account */}
       <Card>
         <CardHeader>
-          <CardTitle>General</CardTitle>
+          <CardTitle>My account</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="center-name" className="mb-1.5 block">
-              Centre name
-            </Label>
-            <Input
-              id="center-name"
-              value={centerName}
-              onChange={(e) => setCenterName(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="admin-name" className="mb-1.5 block">
-              Admin name
-            </Label>
-            <Input
-              id="admin-name"
-              value={adminName}
-              onChange={(e) => setAdminName(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="currency-symbol" className="mb-1.5 block">
-              Currency symbol
-            </Label>
-            <Input
-              id="currency-symbol"
-              value={currencySymbol}
-              onChange={(e) => setCurrencySymbol(e.target.value)}
-              className="max-w-[120px]"
-            />
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              Used when displaying monetary values throughout the app.
-            </p>
-          </div>
-          <Separator />
-          <div className="flex justify-end">
-            <Button onClick={saveGeneral}>Save changes</Button>
-          </div>
+        <CardContent>
+          {loadingAccount ? (
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-56" />
+              </div>
+            </div>
+          ) : account ? (
+            <div className="flex items-center gap-4">
+              <AvatarInitials name={account.fullName} size="lg" />
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-lg font-semibold leading-tight">
+                  {account.fullName}
+                </p>
+                <p className="truncate text-sm text-muted-foreground">{account.email}</p>
+                <Badge
+                  variant={account.role === "admin" ? "info" : "secondary"}
+                  className="mt-2 capitalize"
+                >
+                  {account.role}
+                </Badge>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Not signed in.</p>
+          )}
         </CardContent>
       </Card>
 
@@ -155,42 +134,6 @@ export default function SettingsPage() {
           <p className="mt-2 text-xs text-muted-foreground">
             System matches your operating system&rsquo;s light/dark preference.
           </p>
-        </CardContent>
-      </Card>
-
-      {/* Data Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Data management</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900/40 dark:bg-amber-900/20">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <p className="text-amber-900 dark:text-amber-200">
-              Resetting will permanently delete every student, teacher, class, invoice,
-              session and expense in this browser, and reseed with the default sample
-              data. This can&rsquo;t be undone.
-            </p>
-          </div>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">Reset to seed data</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset all data?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This clears every record across the six modules and reloads the page.
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={resetData}>Reset data</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </CardContent>
       </Card>
     </div>

@@ -12,15 +12,13 @@ import { useInvoices } from "@/hooks/use-invoices";
 import { useSessions } from "@/hooks/use-sessions";
 import { useClasses } from "@/hooks/use-classes";
 import { useTeachers } from "@/hooks/use-teachers";
+import { useExpenses } from "@/hooks/use-expenses";
 import { KpiCard } from "./kpi-card";
-import Link from "next/link";
 import { RevenueChart } from "./revenue-chart";
 import { UpcomingClasses } from "./upcoming-classes";
 import { RecentEnrollments } from "./recent-enrollments";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
-import { useExpenses } from "@/hooks/use-expenses";
-
 
 export function Dashboard() {
   const { data: students, hydrated: sH } = useStudents();
@@ -28,9 +26,9 @@ export function Dashboard() {
   const { data: sessions, hydrated: seH } = useSessions();
   const { data: classes } = useClasses();
   const { data: teachers } = useTeachers();
-  const { data: data_expenses } = useExpenses();
+  const { data: expenses, hydrated: eH } = useExpenses();
 
-  const hydrated = sH && iH && seH;
+  const hydrated = sH && iH && seH && eH;
 
   // KPI calculations
   const totalStudents = students.filter((s) => s.status === "active").length;
@@ -51,21 +49,21 @@ export function Dashboard() {
     isSameDay(parseISO(s.date), today)
   ).length;
 
-  // Last 6 months revenue
-
-  const revenueByMonth = Array.from({ length: 6 }).map((_, idx) => {
+  // Last 6 months: income (paid invoices) vs expenses, side by side
+  const incomeExpensesByMonth = Array.from({ length: 6 }).map((_, idx) => {
     const monthDate = subMonths(today, 5 - idx);
     const key = format(monthDate, "yyyy-MM");
     const income = invoices
-      .filter(
-        (inv) =>
-          inv.status === "Paid" && inv.issueDate.startsWith(key)
-      )
+      .filter((inv) => inv.status === "Paid" && inv.issueDate.startsWith(key))
       .reduce((s, inv) => s + inv.amountPaid, 0);
-    const expenses = data_expenses
-      .filter((exp) => exp.date.startsWith(key))
-      .reduce((s, exp) => s + exp.amount, 0);
-    return { month: format(monthDate, "MMM"), income, expenses };
+    const expensesTotal = expenses
+      .filter((e) => e.date.startsWith(key))
+      .reduce((s, e) => s + e.amount, 0);
+    return {
+      month: format(monthDate, "MMM"),
+      income,
+      expenses: expensesTotal,
+    };
   });
 
   if (!hydrated) {
@@ -93,59 +91,46 @@ export function Dashboard() {
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Good {greeting()}, Botir Karimov
+          Good {greeting()}, Meru
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Here&rsquo;s what&rsquo;s happening at Aqlvoy Sen today.
+          Here&rsquo;s what&rsquo;s happening at Brightseed today.
         </p>
       </header>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-        <Link href="/students">
-          <KpiCard
-            icon={GraduationCap}
-            label="Total Students"
-            value={totalStudents.toString()}
-            hint={`${students.length - totalStudents} inactive`}
-            tone="default"
-          />
-        </Link>
-
-        <Link href="/finance">
-          <KpiCard
-            icon={Wallet}
-            label="Monthly Revenue"
-            value={formatCurrency(monthlyRevenue)}
-            hint={format(today, "MMMM yyyy")}
-            tone="success"
-          />
-        </Link>
-
-        <Link href="/finance">
-          <KpiCard
-            icon={AlertTriangle}
-            label="Unpaid Invoices"
-            value={unpaidCount.toString()}
-            hint="Need follow-up"
-            tone="warning"
-          />
-        </Link>
-
-        <Link href="/schedule">
-          <KpiCard
-            icon={CalendarDays}
-            label="Classes Today"
-            value={classesToday.toString()}
-            hint={format(today, "EEEE")}
-            tone="info"
-          />
-        </Link>
-
+        <KpiCard
+          icon={GraduationCap}
+          label="Total Students"
+          value={totalStudents.toString()}
+          hint={`${students.length - totalStudents} inactive`}
+          tone="default"
+        />
+        <KpiCard
+          icon={Wallet}
+          label="Monthly Revenue"
+          value={formatCurrency(monthlyRevenue)}
+          hint={format(today, "MMMM yyyy")}
+          tone="success"
+        />
+        <KpiCard
+          icon={AlertTriangle}
+          label="Unpaid Invoices"
+          value={unpaidCount.toString()}
+          hint="Need follow-up"
+          tone="warning"
+        />
+        <KpiCard
+          icon={CalendarDays}
+          label="Classes Today"
+          value={classesToday.toString()}
+          hint={format(today, "EEEE")}
+          tone="info"
+        />
       </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <RevenueChart data={revenueByMonth} className="lg:col-span-2" />
+        <RevenueChart data={incomeExpensesByMonth} className="lg:col-span-2" />
         <UpcomingClasses
           sessions={sessions}
           classes={classes}

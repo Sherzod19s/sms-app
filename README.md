@@ -1,30 +1,72 @@
-# Aqlvoy Sen — School Management System (Prototype)
+# Aqlvoy Sen — School Management System
 
-A front-end-only prototype of a School Management System (SMS) for a small
-kids' educational centre. No backend, no database, no auth — every change is
-persisted to `localStorage` via a custom `useLocalStorage` hook.
+A Next.js 14 (App Router) + TypeScript + Tailwind + ShadCN/UI school
+management system, backed by Supabase (PostgreSQL + Auth).
 
 ## Stack
 
 - **Next.js 14** (App Router) + **TypeScript** (strict mode)
 - **Tailwind CSS** + **ShadCN/UI** primitives
-- **FullCalendar** for the scheduling module
-- **Recharts** for finance + dashboard charts
-- **Lucide React** icons, **date-fns** date handling
-- **react-hook-form + zod** for form validation
-- **Sonner** for toasts, **next-themes** for light/dark mode
+- **Supabase** — Postgres database, authentication, Row Level Security
+- **FullCalendar** for scheduling, **Recharts** for charts
+- **Lucide React** icons, **date-fns**, **react-hook-form + zod**, **Sonner**,
+  **next-themes**
 
 ## Getting started
 
-```bash
-# 1. Install dependencies
-npm install
+### 1. Create a Supabase project
 
-# 2. Run the dev server
-npm run dev
+Go to [supabase.com](https://supabase.com), create a new project, and from
+**Project Settings → API** copy:
 
-# 3. Open http://localhost:3000
+- `Project URL`
+- `anon` public key
+
+### 2. Configure environment variables
+
+Create a `.env.local` file in the project root:
+
 ```
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### 3. Run the database migration
+
+In the Supabase dashboard go to **SQL Editor → New query**, paste the contents
+of [`supabase/migrations/001_initial_schema.sql`](./supabase/migrations/001_initial_schema.sql),
+and run it. This creates the six tables (`profiles`, `classes`, `students`,
+`invoices`, `expenses`, `sessions`), enables RLS, and adds policies.
+
+### 4. Create your first admin user
+
+The signup page registers users with `role = 'teacher'` by default. To create
+an admin:
+
+1. In Supabase go to **Authentication → Users → Add user → Create new user**
+2. Enter an email/password and click **Create user**
+3. Go to **Table Editor → profiles**, click **Insert row**, and add:
+   - `id`: the UUID of the user you just created
+   - `full_name`: e.g. `Botir Karimov`
+   - `role`: `admin`
+4. Save.
+
+You can now sign in at `/login`. Subsequent users can sign up at `/signup` and
+will be created as teachers; promote them by editing their `profiles.role`.
+
+> **Recommended (optional)**: add a Postgres trigger that auto-creates a
+> `profiles` row whenever a new user is added to `auth.users`. The signup page
+> attempts the insert from the client, but with email confirmation enabled the
+> insert is unauthenticated and will fail RLS. A trigger is the durable fix.
+
+### 5. Install & run
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and sign in.
 
 ### Other scripts
 
@@ -34,80 +76,72 @@ npm run start   # serve the production build
 npm run lint    # lint
 ```
 
-## How data persists
+## Authorisation model
 
-On first load the app seeds `localStorage` with realistic dummy data
-(8 students, 3 teachers, 4 classes, 6 invoices, 5 calendar sessions).
-After that, every add / edit / delete persists across page refreshes.
+- **Admins** can create, edit and delete every record.
+- **Teachers** can read everything but cannot mutate. UI controls still render
+  for them; their mutations are rejected by Row Level Security and surface as a
+  toast error.
 
-To reset to seed data, clear your browser's `localStorage` for the site
-(`sms:*` keys) and refresh.
+If you want teachers to have any write access, add additional RLS policies in
+the Supabase dashboard (or extend the migration file).
 
 ## Module overview
 
 | Route          | Module          | What it does |
 |----------------|-----------------|--------------|
-| `/dashboard`   | Dashboard       | 4 KPI cards (students, monthly revenue, unpaid invoices, classes today), 6-month revenue bar chart, today's classes list, recent enrolments table. |
-| `/students`    | Students        | Searchable / filterable / sortable / paginated table. Add & edit via dialog with zod-validated form. Delete with confirm. |
-| `/students/[id]` | Student detail | Profile, parent info, class assignment, lead teacher, attendance (static), full invoice history with totals. |
-| `/finance`     | Finance         | Collected / outstanding / month-to-date summary, donut chart of invoice statuses, sortable invoice table with row actions. |
-| `/schedule`    | Schedule        | FullCalendar (month + week views), colour-coded events per class, click for popover (class, teacher, time, room, student count), add-session dialog with auto-filled teacher. |
-| `/teachers`    | Teachers        | Search, sortable table with avatars + assigned-class chips, add/edit dialog (multi-select classes), detail modal with this-week sessions. |
+| `/dashboard`   | Dashboard       | KPI cards, income-vs-expenses chart, today's classes, recent enrolments. |
+| `/students`    | Students        | Searchable / filterable / sortable / paginated table; add / edit / delete; click into detail page. |
+| `/students/[id]` | Student detail | Profile, parent info, class, lead teacher, invoice history. |
+| `/classes`     | Classes         | Card grid; add / edit / delete classes; assign teachers; pick schedule days. |
+| `/finance`     | Finance         | Income / Expenses / Net Balance summary, invoice status donut, invoice table, expenses table. |
+| `/schedule`    | Schedule        | FullCalendar month + week views; click an event for details; add sessions. |
+| `/teachers`    | Teachers        | Read-only list of profiles with `role='teacher'`. New teachers join by signing up. |
+| `/settings`    | Settings        | My Account (read-only profile) + Appearance (theme). |
 
 ## Folder structure
 
 ```
-/app                       — pages (App Router)
-  /dashboard
-  /students
-    /[id]                  — student detail page
-  /finance
-  /schedule
-  /teachers
+/app
+  /(auth)
+    /login                  — sign-in page (no chrome)
+    /signup                 — sign-up page (no chrome)
+    layout.tsx              — centred auth layout
+  /dashboard, /students, /classes, /finance, /schedule, /teachers, /settings
+  layout.tsx                — root layout (wraps everything in AppShell)
 /components
-  /layout                  — Sidebar, Header, MobileNav, ThemeProvider, transitions
-  /modules                 — feature components grouped by module
-  /shared                  — AvatarInitials, ConfirmDelete, EmptyState
-  /ui                      — ShadCN UI primitives
+  /layout                   — AppShell, Sidebar, Header (with user menu), MobileNav, ThemeProvider
+  /modules                  — feature components grouped by module
+  /shared                   — AvatarInitials, ConfirmDelete, EmptyState
+  /ui                       — ShadCN primitives
 /hooks
-  use-local-storage.ts     — SSR-safe persistent state with cross-tab sync
-  create-crud-hook.ts      — generic CRUD factory used by every module hook
-  use-students.ts          — students CRUD
-  use-teachers.ts          — teachers CRUD
-  use-classes.ts           — classes CRUD
-  use-invoices.ts          — invoices CRUD
-  use-sessions.ts          — calendar sessions CRUD
+  create-crud-hook.ts       — Supabase-backed CRUD factory
+  use-students.ts           — wraps create-crud-hook
+  use-classes.ts            — wraps create-crud-hook
+  use-invoices.ts           — wraps create-crud-hook
+  use-expenses.ts           — wraps create-crud-hook
+  use-sessions.ts           — wraps create-crud-hook
+  use-teachers.ts           — custom (reads profiles + classes join)
 /lib
-  types.ts                 — shared TypeScript interfaces
-  seed-data.ts             — initial dummy data
-  utils.ts                 — cn(), formatCurrency() (TJ Somoni), formatDate(), helpers
+  /supabase
+    client.ts               — browser Supabase client
+    server.ts               — server (cookie-aware) Supabase client
+    mappers.ts              — snake_case ↔ camelCase row mappers
+  types.ts                  — shared TypeScript interfaces
+  utils.ts                  — cn(), formatCurrency() (SM), formatDate(), helpers
+/supabase
+  /migrations
+    001_initial_schema.sql  — full DB schema + RLS policies
+/middleware.ts              — session refresh + route protection
 ```
-
-## UX standards built in
-
-- Every empty state has icon + message + primary CTA
-- ShadCN `Skeleton` loaders on first mount (hydration-aware)
-- All forms use `react-hook-form` + zod with inline error messages
-- Toasts via Sonner (success on add/edit, warning on delete)
-- ShadCN `AlertDialog` confirmation before every destructive action
-- Light + dark mode toggle in header (uses `next-themes`)
-- All tables are sortable by clicking column headers
-- All monetary values formatted as `TJ Somoni 1,200.00`
-- TypeScript strict mode — no `any` anywhere
-- Sidebar collapses to icon-only on desktop; hamburger sheet on mobile
-- Smooth fade-up page transitions between routes
-- Header notification bell shows a live badge of unpaid invoice count
-
-## Customising
-
-- **Centre name / branding** — edit `components/layout/sidebar.tsx` and `header.tsx` (look for "Aqlvoy Sen")
-- **Currency** — change `formatCurrency` in `lib/utils.ts`
-- **Seed data** — edit `lib/seed-data.ts` (only used on first load)
-- **Theme colours** — edit the HSL variables in `app/globals.css`
 
 ## Notes
 
-- This is a front-end prototype — closing the browser and clearing storage
-  resets everything to the seed.
-- All CRUD operations are synchronous and instant since there's no network.
-- The "attendance" figure on student detail pages is a static placeholder (85%).
+- All UI components still use the **same hook interface** (`{ data, add,
+  update, remove, hydrated, loading }`) — only the data source changed.
+- DB columns are snake_case; TypeScript fields are camelCase. The mapping lives
+  in `lib/supabase/mappers.ts`.
+- The attendance figure on student detail pages is a static placeholder (85%).
+- The Teacher interface has fields (`subject`, `contact`, `joinDate`) that
+  aren't in the `profiles` schema. They're populated as empty defaults so the
+  existing UI still renders; edits to those fields are silently dropped.

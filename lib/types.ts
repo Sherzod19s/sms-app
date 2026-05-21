@@ -11,6 +11,7 @@ export const EXPENSE_CATEGORIES = [
   "Other",
 ] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
 export type WeekDay =
   | "Monday"
   | "Tuesday"
@@ -34,6 +35,8 @@ export interface Student {
 export interface Teacher {
   id: string;
   name: string;
+  // Fields below aren't in the profiles table — populated as best-effort
+  // (empty defaults) so existing UI continues to render.
   subject: string;
   classIds: string[];
   contact: string;
@@ -57,8 +60,8 @@ export interface Invoice {
   description: string;
   amount: number;
   amountPaid: number;
-  issueDate: string; // ISO
-  dueDate: string; // ISO
+  issueDate: string;
+  dueDate: string;
   status: InvoiceStatus;
 }
 
@@ -67,23 +70,30 @@ export interface Expense {
   description: string;
   category: ExpenseCategory;
   amount: number;
-  date: string; // ISO yyyy-MM-dd
+  date: string;
 }
 
 export interface ClassSession {
   id: string;
   classId: string;
   teacherId: string;
-  date: string; // ISO date (yyyy-MM-dd)
-  startTime: string; // HH:mm
-  endTime: string; // HH:mm
+  date: string;
+  startTime: string;
+  endTime: string;
   room: string;
 }
 
+/**
+ * Common shape exposed by every module hook. Both `hydrated` and `loading` are
+ * present so existing components that check `hydrated` and any new code that
+ * prefers `loading` both work. `loading` is true while the initial fetch is in
+ * flight; `hydrated` is its inverse.
+ */
 export interface CRUDHook<T> {
   data: T[];
-  add: (item: Omit<T, "id">) => T;
-  update: (id: string, patch: Partial<Omit<T, "id">>) => void;
-  remove: (id: string) => void;
+  add: (item: Omit<T, "id">) => Promise<void>;
+  update: (id: string, patch: Partial<Omit<T, "id">>) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  loading: boolean;
   hydrated: boolean;
 }

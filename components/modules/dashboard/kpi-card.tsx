@@ -38,14 +38,14 @@ export function KpiCard({
 }) {
   const styles = toneStyles[tone];
   return (
-    <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+    <Card className="overflow-hidden">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {label}
             </p>
-            <p className="mt-2 font-display text-xl font-semibold tracking-tight">
+            <p className="mt-2 font-display text-2xl font-semibold tracking-tight">
               {value}
             </p>
             {hint && (
